@@ -1,0 +1,51 @@
+{
+  "name": "markdown-to-word-web",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Markdown 片段转 Word（公式/表格）：网页版 + Windows 桌面版，纯本地转换",
+  "license": "MIT",
+  "main": "electron-main.js",
+  "scripts": {
+    "test": "node test/run-tests.js",
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder --win nsis",
+    "build:docx": "node tools/build-sample-docx.js"
+  },
+  "dependencies": {
+    "jszip": "^3.10.2",
+    "markdown-it": "^15.0.2",
+    "mathml2omml": "^0.5.0",
+    "temml": "^0.13.5"
+  },
+  "devDependencies": {
+    "@xmldom/xmldom": "^0.9.12",
+    "electron": "^44.6.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.md2word.desktop",
+    "productName": "Markdown2Word",
+    "directories": {
+      "buildResources": "buildRes",
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "electron-main.js",
+      "src/**/*",
+      "vendor/**/*",
+      "assets/icons/*"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "buildRes/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Markdown2Word"
+    }
+  }
+}

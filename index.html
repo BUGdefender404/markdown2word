@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown 转 Word — 片段转换（公式/表格）</title>
+  <link rel="icon" href="assets/icons/icon-32.png" />
+  <script src="vendor/markdown-it.umd.min.js"></script>
+  <script src="vendor/temml.min.js"></script>
+  <script src="vendor/mathml2omml.iife.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="src/converter/m2w-core.js"></script>
+  <script src="src/docx-builder.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #f4f6fb; color: #1f2328; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header {
+      background: linear-gradient(120deg, #4f46e5, #7c3aed);
+      color: #fff; padding: 18px 28px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    header img { width: 34px; height: 34px; }
+    header h1 { font-size: 19px; margin: 0; font-weight: 600; }
+    header .sub { font-size: 12.5px; opacity: .88; }
+    header .badge {
+      margin-left: auto; background: rgba(255,255,255,.16); border-radius: 999px;
+      padding: 4px 12px; font-size: 12px;
+    }
+    .wrap { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; max-width: 1280px; width: 100%; margin: 0 auto; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button {
+      border: none; border-radius: 8px; padding: 10px 20px;
+      font-size: 14px; cursor: pointer; font-family: inherit; transition: .15s;
+    }
+    button:disabled { opacity: .55; cursor: default; }
+    .btn-primary { background: #4f46e5; color: #fff; font-weight: 600; }
+    .btn-primary:hover:not(:disabled) { background: #4338ca; }
+    .btn-secondary { background: #e6e8f0; color: #1f2328; }
+    .btn-secondary:hover { background: #d5d9e6; }
+    .btn-ghost { background: transparent; color: #6b7280; }
+    .btn-ghost:hover { background: #e8eaf1; }
+    .count { color: #6b7280; font-size: 12.5px; margin-left: auto; }
+    .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; min-height: 55vh; }
+    @media (max-width: 900px) { .panes { grid-template-columns: 1fr; } }
+    .pane {
+      background: #fff; border: 1px solid #e3e6ef; border-radius: 12px;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .pane-head {
+      padding: 9px 14px; font-size: 13px; color: #57606a; font-weight: 600;
+      border-bottom: 1px solid #eef0f5; background: #fafbfd;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pane-head .hint { font-weight: 400; color: #9aa1ad; margin-left: auto; font-size: 12px; }
+    textarea {
+      flex: 1; border: none; resize: none; outline: none; padding: 14px;
+      font-family: Consolas, "Microsoft YaHei", monospace; font-size: 13px; line-height: 1.65;
+      min-height: 340px;
+    }
+    .preview { flex: 1; overflow: auto; padding: 18px 22px; font-size: 14.5px; line-height: 1.75; min-height: 340px; }
+    .preview h1, .preview h2, .preview h3, .preview h4, .preview h5, .preview h6 { margin: 1em 0 .45em; line-height: 1.35; color: #1f2328; }
+    .preview h1 { font-size: 1.65em; } .preview h2 { font-size: 1.38em; } .preview h3 { font-size: 1.2em; }
+    .preview h1, .preview h2 { border-bottom: 1px solid #eceef3; padding-bottom: .25em; }
+    .preview p { margin: .55em 0; }
+    .preview code { background: #f2f3f7; padding: .1em .4em; border-radius: 4px; font-size: .92em; font-family: Consolas, monospace; }
+    .preview pre { background: #f6f7fa; border: 1px solid #e9ebf2; border-radius: 8px; padding: 12px 14px; overflow: auto; }
+    .preview pre code { background: none; padding: 0; }
+    .preview blockquote { margin: .7em 0; padding: .35em 1em; border-left: 4px solid #c7cbe0; color: #57606a; background: #f8f9fc; }
+    .preview table { border-collapse: collapse; margin: .8em 0; }
+    .preview th, .preview td { border: 1px solid #cfd4e0; padding: 6px 12px; }
+    .preview th { background: #f2f3f7; }
+    .preview hr { border: none; border-top: 1px solid #dfe2ec; margin: 1.2em 0; }
+    .preview img { max-width: 100%; }
+    .mblock { text-align: center; margin: .9em 0; overflow-x: auto; }
+    math { font-size: 1.06em; }
+    .status {
+      display: none; padding: 9px 14px; border-radius: 8px; font-size: 13px; line-height: 1.6;
+      white-space: pre-wrap; word-break: break-all;
+    }
+    .status.show { display: block; }
+    .status.ok { background: #dcfce7; color: #14532d; }
+    .status.warn { background: #fef9c3; color: #713f12; }
+    .status.err { background: #fee2e2; color: #7f1d1d; }
+    footer { text-align: center; color: #9aa1ad; font-size: 12px; padding: 10px 0 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/icons/icon-32.png" alt="" />
+    <div>
+      <h1>Markdown 转 Word</h1>
+      <div class="sub">粘贴片段 → 下载 .docx：LaTeX 公式转为 Word 原生公式，表格/列表/代码完整保留</div>
+    </div>
+    <div class="badge">🔒 纯本地转换，内容不上传</div>
+  </header>
+
+  <div class="wrap">
+    <div class="toolbar">
+      <button id="btn-download" class="btn-primary">下载 Word 文档（.docx）</button>
+      <label class="btn-secondary" style="display:inline-block;line-height:1.2">
+        上传 .md 文件<input type="file" id="file" accept=".md,.markdown,.txt" style="display:none" />
+      </label>
+      <button id="btn-sample" class="btn-secondary">插入示例</button>
+      <button id="btn-clear" class="btn-ghost">清空</button>
+      <span id="count" class="count"></span>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-head">Markdown 输入 <span class="hint">支持 $行内$、$$块级$$ 公式、GFM 表格</span></div>
+        <textarea id="input" placeholder="把 AI 回复里的 Markdown 片段粘贴到这里（Ctrl+V）…"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-head">效果预览 <span class="hint">下载后的 Word 公式可继续编辑</span></div>
+        <div id="preview" class="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Markdown2Word 网页版 · 转换在本机浏览器完成 · 公式由 LaTeX 转为 Word 原生 OMML</footer>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
