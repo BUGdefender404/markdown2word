@@ -10,7 +10,7 @@
 
 | 形态 | 获取方式 |
 |------|----------|
-| **Windows 桌面版**（推荐） | [Releases](../../releases/latest) 下载 `Markdown2Word Setup x.x.x.exe` → 双击安装 → 桌面快捷方式即用 |
+| **Windows 桌面版**（推荐） | [Releases](../../releases/latest) 下载 `Markdown2Word Setup x.x.x.exe` → 双击安装 → 开始菜单/桌面快捷方式即用；关闭窗口只是缩到右下角托盘，托盘左键唤起、右键退出 |
 | **网页版** | [在线使用](https://bugdefender404.github.io/markdown2word/)，或下载源码后双击 `index.html` |
 
 ## 为什么做这个
@@ -41,7 +41,7 @@ Markdown（markdown-it + 自研 $…$ 定界符规则，防货币符号误判、
 ```
 
 - **网页版**：纯静态页面，转换库全部打包在 `vendor/`，双击 `index.html` 离线可用
-- **桌面版**：Electron 封装同一页面（`electron-main.js`），额外提供独立窗口、外链交系统浏览器、docx"另存为"对话框
+- **桌面版**：Electron 封装同一页面（`electron-main.js`），额外提供独立窗口、托盘常驻（点 X 缩到托盘，左键唤起/隐藏，右键退出；再次双击快捷方式唤起已开窗口）、外链交系统浏览器、docx"另存为"对话框
 
 ## 开发
 

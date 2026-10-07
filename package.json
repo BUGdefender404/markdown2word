@@ -1,6 +1,6 @@
 {
   "name": "markdown-to-word-web",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Markdown 片段转 Word（公式/表格）：网页版 + Windows 桌面版，纯本地转换",
   "license": "MIT",
